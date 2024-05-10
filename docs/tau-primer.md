@@ -22,6 +22,76 @@ TEST(TestSuiteName, TestName) {
 ```
 The `TEST` macro takes two parameters - the first is the name of the Test Suite, and the second is the name of the test. This allows tests to be grouped for convenience. 
 
+## Defining Tests with setup and teardown functions
+
+First define a test fixture:
+
+```c
+struct ExampleTestFixture {
+   // Define variables needed for this fixture.
+   // This test fixture may be empty.
+   // In this example we have one single variable:
+   int test_variable;
+};
+```
+
+Then define the function that should be called before each test:
+
+```c
+TEST_F_SETUP(ExampleTestFixture)
+{
+    // This function is called before each test that is part of
+    // `ExampleTestFixture`.
+    // A parameter named `tau` which is a pointer to a
+    // `ExampleTestFixture` object, is available for us.
+
+    // When this function is called it has already been cleared.
+    // We can prove this by adding this test:
+    CHECK(tau->test_variable == 0, "Weird, fixture was not cleared before setup");
+
+    // Now we can do whatever is needed to setup each test.
+    // An example could be to open a file or configure something.
+
+    // In this example, we just assign a `test_variable` a meaningful number.
+    tau->test_variable = 42;
+}
+```
+
+In a similar fashion we can also define a teardown function:
+
+```c
+TEST_F_TEARDOWN(ExampleTestFixture)
+{
+    // This function is called after each test that is part of
+    // `ExampleTestFixture`.
+    // A parameter named `tau` which is a const pointer to a
+    // `ExampleTestFixture` object, is available also for
+    // this function.
+    // For example this function can return resources acquired by
+    // the setup function.
+    CHECK(tau != NULL);
+}
+```
+
+Now we can define two tests for this fixture.
+
+```c
+TEST_F(ExampleTestFixture, EnsureSetupRanBefore)
+{
+    // Let's check that the framework called our setup function before.
+    CHECK(tau->test_variable == 42);
+
+    tau->test_variable += 24;
+    CHECK(tau->test_variable == 42 + 24);
+}
+
+TEST_F(ExampleTestFixture, EnsureSetupRanBeforeAgain)
+{
+    // Let's check that the framework called our setup also this time.
+    CHECK(tau->test_variable == 42);
+    tau->test_variable++;
+}
+```
 
 ## Testing Macros
 Tau provides two variants of Assertion Macros - `CHECK`s and `ASSERT`s. These resemble function calls. When these assertions fail, Tau prints the source code location (file + line number) along with a failure message. 
