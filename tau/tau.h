@@ -105,6 +105,7 @@ typedef void (*tau_testsuite_t)();
 typedef struct tauTestSuiteStruct {
     tau_testsuite_t func;
     char* name;
+    int ignored;    // Flag to mark tests that should be skipped
 } tauTestSuiteStruct;
 
 typedef struct tauTestStateStruct {
@@ -184,6 +185,8 @@ static void incrementWarnings() {
 #ifndef TAU_NO_TESTING
 // extern to the global state tau needs to execute
 TAU_EXTERN tauTestStateStruct tauTestContext;
+// External declaration for the ignored state of the current test
+TAU_EXTERN volatile int isCurrentTestIgnored;
 
 #if defined(_MSC_VER)
     #ifndef TAU_USE_OLD_QPC
@@ -872,6 +875,7 @@ static void tauPrintHexBufCmp(const void* const buff, const void* const ref, con
                                                     tauTestContext.numTestSuites));            \
         tauTestContext.tests[index].func = &_TAU_TEST_FUNC_##TESTSUITE##_##TESTNAME;           \
         tauTestContext.tests[index].name = name;                                               \
+        tauTestContext.tests[index].ignored = 0;                                               \
         TAU_SNPRINTF(name, nameSize, "%s", namePart);                                          \
     }                                                                                          \
     void _TAU_TEST_FUNC_##TESTSUITE##_##TESTNAME(void)
@@ -913,8 +917,72 @@ static void tauPrintHexBufCmp(const void* const buff, const void* const ref, con
                                                                         tauTestContext.numTestSuites));  \
         tauTestContext.tests[index].func = &__TAU_TEST_FIXTURE_##FIXTURE##_##NAME;                       \
         tauTestContext.tests[index].name = name;                                                         \
+        tauTestContext.tests[index].ignored = 0;                                                         \
         TAU_SNPRINTF(name, nameSize, "%s", namePart);                                                    \
     }                                                                                                    \
+    static void __TAU_TEST_FIXTURE_RUN_##FIXTURE##_##NAME(struct FIXTURE* const tau)
+
+/**
+    Similar to the TEST() macro but marks the test to be ignored during execution.
+    This allows for temporarily disabling tests without removing them from the codebase.
+*/
+#define IGNORE_TEST(TESTSUITE, TESTNAME)                                                                \
+    TAU_EXTERN tauTestStateStruct tauTestContext;                                                       \
+    static void _TAU_TEST_FUNC_##TESTSUITE##_##TESTNAME(void);                                          \
+    TAU_TEST_INITIALIZER(tau_register_##TESTSUITE##_##TESTNAME) {                                       \
+        const tau_ull index = tauTestContext.numTestSuites++;                                           \
+        const char* const namePart = #TESTSUITE "." #TESTNAME;                                          \
+        const tau_ull nameSize = strlen(namePart) + 1;                                                  \
+        char* const name = TAU_PTRCAST(char* , malloc(nameSize));                                       \
+        tauTestContext.tests = TAU_PTRCAST(                                                             \
+                                    tauTestSuiteStruct*,                                                \
+                                    tau_realloc(TAU_PTRCAST(void* , tauTestContext.tests),              \
+                                                sizeof(tauTestSuiteStruct) *                            \
+                                                    tauTestContext.numTestSuites));                     \
+        tauTestContext.tests[index].func = &_TAU_TEST_FUNC_##TESTSUITE##_##TESTNAME;                    \
+        tauTestContext.tests[index].name = name;                                                        \
+        tauTestContext.tests[index].ignored = 1;    /* Mark test as ignored */                          \
+        TAU_SNPRINTF(name, nameSize, "%s", namePart);                                                   \
+    }                                                                                                   \
+    void _TAU_TEST_FUNC_##TESTSUITE##_##TESTNAME(void)
+
+/**
+    Similar to the TEST_F() macro but marks the fixture test to be ignored during execution.
+    Maintains all the fixture functionality (setup/teardown) while allowing the test to be skipped.
+*/
+#define IGNORE_TEST_F(FIXTURE, NAME)                                                                    \
+    TAU_EXTERN tauTestStateStruct tauTestContext;                                                       \
+    static void __TAU_TEST_FIXTURE_SETUP_##FIXTURE(struct FIXTURE* const);                              \
+    static void __TAU_TEST_FIXTURE_TEARDOWN_##FIXTURE(struct FIXTURE* const);                           \
+    static void __TAU_TEST_FIXTURE_RUN_##FIXTURE##_##NAME(struct FIXTURE* const);                       \
+                                                                                                        \
+    static void __TAU_TEST_FIXTURE_##FIXTURE##_##NAME() {                                               \
+        struct FIXTURE fixture;                                                                         \
+        memset(&fixture, 0, sizeof(fixture));                                                           \
+        __TAU_TEST_FIXTURE_SETUP_##FIXTURE(&fixture);                                                   \
+        if(hasCurrentTestFailed == 1) {                                                                 \
+            return;                                                                                     \
+        }                                                                                               \
+                                                                                                        \
+        __TAU_TEST_FIXTURE_RUN_##FIXTURE##_##NAME(&fixture);                                            \
+        __TAU_TEST_FIXTURE_TEARDOWN_##FIXTURE(&fixture);                                                \
+    }                                                                                                   \
+                                                                                                        \
+    TAU_TEST_INITIALIZER(tau_register_##FIXTURE##_##NAME) {                                             \
+        const tau_ull index = tauTestContext.numTestSuites++;                                           \
+        const char* const namePart = #FIXTURE "." #NAME;                                                \
+        const tau_ull nameSize = strlen(namePart) + 1;                                                  \
+        char* name = TAU_PTRCAST(char* , malloc(nameSize));                                             \
+        tauTestContext.tests = TAU_PTRCAST(                                                             \
+                                    tauTestSuiteStruct*,                                                \
+                                    tau_realloc(TAU_PTRCAST(void*, tauTestContext.tests),               \
+                                                                sizeof(tauTestSuiteStruct) *            \
+                                                                    tauTestContext.numTestSuites));     \
+        tauTestContext.tests[index].func = &__TAU_TEST_FIXTURE_##FIXTURE##_##NAME;                      \
+        tauTestContext.tests[index].name = name;                                                        \
+        tauTestContext.tests[index].ignored = 1;    /* Mark test as ignored */                          \
+        TAU_SNPRINTF(name, nameSize, "%s", namePart);                                                   \
+    }                                                                                                   \
     static void __TAU_TEST_FIXTURE_RUN_##FIXTURE##_##NAME(struct FIXTURE* const tau)
 
 
@@ -1109,9 +1177,18 @@ static void tauRunTests() {
     for(tau_ull i = 0; i < tauTestContext.numTestSuites; i++) {
         checkIsInsideTestSuite = 1;
         hasCurrentTestFailed = 0;
+        isCurrentTestIgnored = tauTestContext.tests[i].ignored;
 
         if(tauShouldFilterTest(cmd_filter, tauTestContext.tests[i].name))
             continue;
+
+        // Skip ignored tests
+        if(isCurrentTestIgnored) {
+            tauColouredPrintf(TAU_COLOUR_BRIGHTYELLOW_, "[ IGNORED  ] ");
+            tauColouredPrintf(TAU_COLOUR_DEFAULT_, "%s\n", tauTestContext.tests[i].name);
+            tauStatsSkippedTests++;
+            continue;
+        }
 
         if(!tauDisplayOnlyFailedOutput) {
             tauColouredPrintf(TAU_COLOUR_BRIGHTGREEN_, "[ RUN      ] ");
@@ -1269,6 +1346,7 @@ inline int tau_main(const int argc, const char* const * const argv) {
     volatile int hasCurrentTestFailed = 0;       \
     volatile int shouldFailTest = 0;             \
     volatile int shouldAbortTest = 0;            \
+    volatile int isCurrentTestIgnored = 0;       \
     tau_u64 tauStatsNumWarnings = 0;
 
 // If a user wants to define their own `main()` function, this _must_ be at the very end of the functtion
