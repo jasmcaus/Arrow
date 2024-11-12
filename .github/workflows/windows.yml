@@ -22,9 +22,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up MinGW
-        uses: egor-tensin/setup-mingw@v2
+        uses: egor-tensin/setup-mingw@v2.2.0
         with:
           platform: ${{ matrix.architecture }}
+          version: 12.2.0
 
       - name: CMake
         run: |
