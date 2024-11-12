@@ -1077,7 +1077,7 @@ static tau_bool tauCmdLineRead(const int argc, const char* const * const argv) {
         }
 
         // Disable Summary
-        else if(strncmp(argv[i], summaryStr, strlen(summaryStr))) {
+        else if(strncmp(argv[i], summaryStr, strlen(summaryStr)) == 0) {
             tauDisableSummary = 1;
         }
 
