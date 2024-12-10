@@ -366,7 +366,7 @@ TEST(cpp, Section) {
 }
 
 struct Stack {
-    char* name; 
+    const char* name; 
     int age;
 
     int pop() {
@@ -385,7 +385,7 @@ TEST_F_SETUP(Stack) {
 }
 
 TEST_F_TEARDOWN(Stack) {
-
+    (void)tau;
 }
 
 TEST_F(Stack, TestStackDetails) {
