@@ -16,6 +16,8 @@ Copyright (c) 2021 Jason Dsouza <http://github.com/jasmcaus>
 #include <tau/types.h>
 #include <tau/misc.h>
 
+TAU_DISABLE_DEBUG_WARNINGS
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -695,8 +697,8 @@ static void tauPrintColouredIfDifferent(const tau_u8 ch, const tau_u8 ref) {
 
 
 static void tauPrintHexBufCmp(const void* const buff, const void* const ref, const int size) {
-    const tau_u8* const test_buff = TAU_CAST(const tau_u8* const, buff);
-    const tau_u8* const ref_buff = TAU_CAST(const tau_u8* const, ref);
+    const tau_u8 *const test_buff = TAU_CAST(const tau_u8 *, buff);
+    const tau_u8 *const ref_buff = TAU_CAST(const tau_u8 *, ref);
 
     tauColouredPrintf(TAU_COLOUR_CYAN_,"<");
     if(size != 0)
@@ -1474,5 +1476,7 @@ inline int tau_main(const int argc, const char* const * const argv) {
     // volatile int shouldFailTest = 0;
     // volatile int shouldAbortTest = 0;
 #endif // TAU_NO_TESTING
+
+    TAU_DISABLE_DEBUG_WARNINGS_POP
 
 #endif // TAU_H_
