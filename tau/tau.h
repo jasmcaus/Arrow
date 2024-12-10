@@ -440,8 +440,6 @@ static inline int tauIsDigit(const char c) { return c >= '0' && c <= '9'; }
 static inline int tauShouldDecomposeMacro(const char* const actual, const char* const expected, const int isStringCmp) {
     // Signal that the macro can be further decomposed if either of the following symbols are present
     int dots = 0;
-    int numActualDigits = 0;
-    int numExpectedDigits = 0;
 
     // If not inside a string comparison, we will return `1` only if we determine that `actual` is a variable
     // name/expression (i.e for a value, we search through each character verifying that each is a digit
@@ -449,7 +447,7 @@ static inline int tauShouldDecomposeMacro(const char* const actual, const char* 
     if(!isStringCmp) {
         for(int i = 0; i < strlen(actual); i++) {
             if(tauIsDigit(actual[i])) {
-                numActualDigits++;
+                continue;
             } else if(actual[i] == '.') {
                 dots++;
                 if(dots > 1) { return 1; }
@@ -461,7 +459,7 @@ static inline int tauShouldDecomposeMacro(const char* const actual, const char* 
         dots = 0;
         for(int i=0; i < strlen(expected); i++) {
             if(tauIsDigit(expected[i])) {
-                numExpectedDigits++;
+                continue;
             } else if(expected[i] == '.') {
                 dots++;
                 if(dots > 1) { return 1; }
