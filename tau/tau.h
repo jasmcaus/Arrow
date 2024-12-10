@@ -429,8 +429,10 @@ tauColouredPrintf(const int colour, const char* const fmt, ...) {
         printf(__VA_ARGS__)
 #endif // TAU_NO_TESTING
 
-
-static inline int tauIsDigit(const char c) { return c >= '0' && c <= '9'; }
+static inline int tauIsNumberConstant(const char c)
+{
+    return ((c >= '0' && c <= '9') || c == '-' || c == '+' || c == '.');
+}
 // If the macro arguments can be decomposed further, we need to print the `In macro ..., so and so failed`.
 // This method signals whether this message should be printed.
 //
@@ -439,34 +441,16 @@ static inline int tauIsDigit(const char c) { return c >= '0' && c <= '9'; }
 // See: https://stackoverflow.com/questions/20944784/why-is-conversion-from-string-constant-to-char-valid-in-c-but-invalid-in-c/20944858
 static inline int tauShouldDecomposeMacro(const char* const actual, const char* const expected, const int isStringCmp) {
     // Signal that the macro can be further decomposed if either of the following symbols are present
-    int dots = 0;
 
     // If not inside a string comparison, we will return `1` only if we determine that `actual` is a variable
     // name/expression (i.e for a value, we search through each character verifying that each is a digit
     // - for floats, we allow a maximum of 1 '.' char)
+    // We can instead just check that the first character is either a digit, '+', '-' or '.' to filter out
+    // number constants since according to the standard identifiers cannot begin with digits.
+    // This accounts for number constants such as -44, 0xFA, 400000000UL, 0b0010(c++) and 1'000'123(c++).
     if(!isStringCmp) {
-        for(tau_ull i = 0; i < strlen(actual); i++) {
-            if(tauIsDigit(actual[i])) {
-                continue;
-            } else if(actual[i] == '.') {
-                dots++;
-                if(dots > 1) { return 1; }
-            } else {
-                return 1;
-            }
-        }
-        // Do the same for `expected`
-        dots = 0;
-        for(tau_ull i=0; i < strlen(expected); i++) {
-            if(tauIsDigit(expected[i])) {
-                continue;
-            } else if(expected[i] == '.') {
-                dots++;
-                if(dots > 1) { return 1; }
-            } else {
-                return 1;
-            }
-        }
+        if (!tauIsNumberConstant(*actual))
+            return 1;
     }
     // Inside a string comparison, we search for common expression tokens like the following:
     // '(', ')', '-'
