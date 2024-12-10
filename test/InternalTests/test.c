@@ -20,7 +20,7 @@ TEST(c, MemAlloc) {
     CHECK(mem != NULL, "Mem ideally should not be NULL");
 }
 
-int retu() {
+int retu(void) {
     return 10000000;
 }
 TEST(c, ForLoop) { 

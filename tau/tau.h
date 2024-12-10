@@ -101,7 +101,7 @@ TAU_DISABLE_DEBUG_WARNINGS
 
 #ifndef TAU_NO_TESTING
 
-typedef void (*tau_testsuite_t)();
+typedef void (*tau_testsuite_t)(void);
 typedef struct tauTestSuiteStruct {
     tau_testsuite_t func;
     char* name;
@@ -157,17 +157,17 @@ extern volatile int shouldAbortTest;
     appropriately - fail the current test suite and carry on with the other checks (or move on to the next
     suite in the case of a REQUIRE)
 */
-static void failIfInsideTestSuite__();
-static void abortIfInsideTestSuite__();
+static void failIfInsideTestSuite__(void);
+static void abortIfInsideTestSuite__(void);
 
-static void failIfInsideTestSuite__() {
+static void failIfInsideTestSuite__(void) {
     if(checkIsInsideTestSuite == 1) {
         hasCurrentTestFailed = 1;
         shouldFailTest = 1;
     }
 }
 
-static void abortIfInsideTestSuite__() {
+static void abortIfInsideTestSuite__(void) {
     if(checkIsInsideTestSuite == 1) {
         hasCurrentTestFailed = 1;
         shouldAbortTest = 1;
@@ -176,7 +176,7 @@ static void abortIfInsideTestSuite__() {
 
 #endif // TAU_NO_TESTING
 
-static void incrementWarnings() {
+static void incrementWarnings(void) {
 #ifndef TAU_NO_TESTING
     tauStatsNumWarnings++;
 #endif // TAU_NO_TESTING
@@ -244,7 +244,7 @@ TAU_EXTERN volatile int isCurrentTestIgnored;
     NOTE: This method has been edited to return the time (in nanoseconds). Depending on how large this value
     (e.g: 54890938849ns), we appropriately convert it to milliseconds/seconds before displaying it to stdout.
 */
-static inline double tauClock() {
+static inline double tauClock(void) {
 #ifdef TAU_WIN_
     LARGE_INTEGER counter;
     LARGE_INTEGER frequency;
@@ -999,7 +999,7 @@ static void tauPrintHexBufCmp(const void* const buff, const void* const ref, con
     static void __TAU_TEST_FIXTURE_TEARDOWN_##FIXTURE(struct FIXTURE* const);                            \
     static void __TAU_TEST_FIXTURE_RUN_##FIXTURE##_##NAME(struct FIXTURE* const);                        \
                                                                                                          \
-    static void __TAU_TEST_FIXTURE_##FIXTURE##_##NAME() {                                                \
+    static void __TAU_TEST_FIXTURE_##FIXTURE##_##NAME(void) {                                                \
         struct FIXTURE fixture;                                                                          \
         memset(&fixture, 0, sizeof(fixture));                                                            \
         __TAU_TEST_FIXTURE_SETUP_##FIXTURE(&fixture);                                                    \
@@ -1062,7 +1062,7 @@ static void tauPrintHexBufCmp(const void* const buff, const void* const ref, con
     static void __TAU_TEST_FIXTURE_TEARDOWN_##FIXTURE(struct FIXTURE* const);                           \
     static void __TAU_TEST_FIXTURE_RUN_##FIXTURE##_##NAME(struct FIXTURE* const);                       \
                                                                                                         \
-    static void __TAU_TEST_FIXTURE_##FIXTURE##_##NAME() {                                               \
+    static void __TAU_TEST_FIXTURE_##FIXTURE##_##NAME(void) {                                               \
         struct FIXTURE fixture;                                                                         \
         memset(&fixture, 0, sizeof(fixture));                                                           \
         __TAU_TEST_FIXTURE_SETUP_##FIXTURE(&fixture);                                                   \
@@ -1165,7 +1165,7 @@ static inline FILE* tau_fopen(const char* const filename, const char* const mode
 }
 
 
-static void tau_help_() {
+static void tau_help_(void) {
     printf("Usage: %s [options] [test...]\n", tau_argv0_);
     printf("\n");
     printf("Run the specified unit tests; or if the option '--skip' is used, run all\n");
@@ -1264,7 +1264,7 @@ static tau_bool tauCmdLineRead(const int argc, const char* const * const argv) {
     return tau_true;
 }
 
-static int tauCleanup() {
+static int tauCleanup(void) {
     for (tau_ull i = 0; i < tauTestContext.numTestSuites; i++)
         free(TAU_PTRCAST(void* , tauTestContext.tests[i].name));
 
@@ -1278,7 +1278,7 @@ static int tauCleanup() {
 }
 
 // Triggers and runs all unit tests
-static void tauRunTests() {
+static void tauRunTests(void) {
     // Run tests
     for(tau_ull i = 0; i < tauTestContext.numTestSuites; i++) {
         checkIsInsideTestSuite = 1;
