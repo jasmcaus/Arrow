@@ -443,7 +443,7 @@ static inline int tauShouldDecomposeMacro(const char* const actual, const char* 
     // name/expression (i.e for a value, we search through each character verifying that each is a digit
     // - for floats, we allow a maximum of 1 '.' char)
     if(!isStringCmp) {
-        for(int i = 0; i < strlen(actual); i++) {
+        for(tau_ull i = 0; i < strlen(actual); i++) {
             if(tauIsDigit(actual[i])) {
                 continue;
             } else if(actual[i] == '.') {
@@ -455,7 +455,7 @@ static inline int tauShouldDecomposeMacro(const char* const actual, const char* 
         }
         // Do the same for `expected`
         dots = 0;
-        for(int i=0; i < strlen(expected); i++) {
+        for(tau_ull i=0; i < strlen(expected); i++) {
             if(tauIsDigit(expected[i])) {
                 continue;
             } else if(expected[i] == '.') {
