@@ -449,7 +449,7 @@ static inline int tauShouldDecomposeMacro(const char* const actual, const char* 
     // number constants since according to the standard identifiers cannot begin with digits.
     // This accounts for number constants such as -44, 0xFA, 400000000UL, 0b0010(c++) and 1'000'123(c++).
     if(!isStringCmp) {
-        if (!tauIsNumberConstant(*actual))
+        if (!tauIsNumberConstant(*actual) || !tauIsNumberConstant(*expected))
             return 1;
     }
     // Inside a string comparison, we search for common expression tokens like the following:

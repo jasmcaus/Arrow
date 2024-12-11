@@ -398,66 +398,77 @@ TEST_F(Stack, TestStackDetails) {
 TEST(test_tauShouldDecomposeMacro_numbers, decimals)
 {
     CHECK_EQ(123456789, 123456789);
-    CHECK_EQ(tauShouldDecomposeMacro("123456789", "123456789", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("1", "123456789", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("123456789", "1", 0), 0);
 }
 
 TEST(test_tauShouldDecomposeMacro_numbers, decimals_with_sign)
 {
     CHECK_EQ(-123456789, -123456789);
-    CHECK_EQ(tauShouldDecomposeMacro("-123456789", "-123456789", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("-123456789", "1", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("1", "-123456789", 0), 0);
     CHECK_EQ(+123456789, +123456789);
-    CHECK_EQ(tauShouldDecomposeMacro("+123456789", "+123456789", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("+123456789", "1", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("1", "+123456789", 0), 0);
 }
 
 TEST(test_tauShouldDecomposeMacro_numbers, decimals_with_suffix)
 {
     CHECK_EQ(987654321012345678UL, 987654321012345678UL);
-    CHECK_EQ(tauShouldDecomposeMacro("987654321012345678UL", "987654321012345678UL", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("987654321012345678UL", "1", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("1", "987654321012345678UL", 0), 0);
 }
 
 TEST(test_tauShouldDecomposeMacro_numbers, hexadecimals)
 {
     CHECK_EQ(0xFFFFFFFF, 0xFFFFFFFF);
-    CHECK_EQ(tauShouldDecomposeMacro("0xFFFFFFFF", "0xFFFFFFFF", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("0xFFFFFFFF", "1", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("1", "0xFFFFFFFF", 0), 0);
 }
 
 TEST(test_tauShouldDecomposeMacro_numbers, octals)
 {
     CHECK_EQ(007, 007);
-    CHECK_EQ(tauShouldDecomposeMacro("007", "007", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("1", "007", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("007", "1", 0), 0);
 }
 
 TEST(test_tauShouldDecomposeMacro_numbers, floats)
 {
     CHECK_EQ(420.69, 420.69);
-    CHECK_EQ(tauShouldDecomposeMacro("420.69", "420.69", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("420.69", "1", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("1", "420.69", 0), 0);
 }
 
 TEST(test_tauShouldDecomposeMacro_numbers, floats_only_fractional_part)
 {
     CHECK_EQ(.69, .69);
-    CHECK_EQ(tauShouldDecomposeMacro(".69", ".69", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro(".69", "1", 0), 0);
+    CHECK_EQ(tauShouldDecomposeMacro("1", ".69", 0), 0);
 }
 
 TEST(test_tauShouldDecomposeMacro_c_identifiers, letters)
 {
     const int myVar = 1;
     CHECK_EQ(myVar, myVar);
-    CHECK_EQ(tauShouldDecomposeMacro("myVar", "myVar", 0), 1);
+    CHECK_EQ(tauShouldDecomposeMacro("myVar", "a", 0), 1);
+    CHECK_EQ(tauShouldDecomposeMacro("a", "myVar", 0), 1);
 }
 
 TEST(test_tauShouldDecomposeMacro_c_identifiers, letters_and_numbers)
 {
     const int v1 = 1;
     CHECK_EQ(v1, v1);
-    CHECK_EQ(tauShouldDecomposeMacro("v1", "v1", 0), 1);
+    CHECK_EQ(tauShouldDecomposeMacro("v1", "a", 0), 1);
+    CHECK_EQ(tauShouldDecomposeMacro("a", "v1", 0), 1);
 }
 
 TEST(test_tauShouldDecomposeMacro_c_identifiers, underscores_and_letters)
 {
     const int __myVar__ = 1;
     CHECK_EQ(__myVar__, __myVar__);
-    CHECK_EQ(tauShouldDecomposeMacro("__myVar__", "__myVar__", 0), 1);
+    CHECK_EQ(tauShouldDecomposeMacro("__myVar__", "a", 0), 1);
+    CHECK_EQ(tauShouldDecomposeMacro("a", "__myVar__", 0), 1);
 }
 
 TEST(test_tauShouldDecomposeMacro_c_identifiers, mixed)
@@ -465,5 +476,6 @@ TEST(test_tauShouldDecomposeMacro_c_identifiers, mixed)
 #define MYMACRO_2024dec10 1
     CHECK_EQ(MYMACRO_2024dec10, MYMACRO_2024dec10);
 #undef MYMACRO_2024dec10
-    CHECK_EQ(tauShouldDecomposeMacro("MYMACRO_2024dec10", "MYMACRO_2024dec10", 0), 1);
+    CHECK_EQ(tauShouldDecomposeMacro("MYMACRO_2024dec10", "a", 0), 1);
+    CHECK_EQ(tauShouldDecomposeMacro("a", "MYMACRO_2024dec10", 0), 1);
 }
